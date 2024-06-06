@@ -10,9 +10,8 @@ let resources = [
 	];
 
 let programTileRenderer;
-let vboPositions;
-let vboTexCoords;
 let texTileMap;
+let screenQuad;
 let texMap;
 let time = 0;
 let mapWidth;
@@ -63,13 +62,12 @@ function tick( timeStamp )
 
 	gl.clearColor(0.0, (1.0 + Math.sin(time / 100)) / 2.0, 0.0, 1.0); 
 	gl.clear(gl.COLOR_BUFFER_BIT); 
+	
 	programTileRenderer.use();
-	gl.enableVertexAttribArray(programTileRenderer.aLoc_a_pos); 
-	gl.enableVertexAttribArray(programTileRenderer.aLoc_a_tex); 
-	gl.activeTexture(gl.TEXTURE0);
-	gl.uniform1i(programTileRenderer.uLoc_u_texture, 0);
+	screenQuad.use(programTileRenderer.aLoc_a_pos, programTileRenderer.aLoc_a_tex);
+	texTileMap.use(gl.TEXTURE_2D, 0, programTileRenderer.uLoc_u_texture); // bind to texture unit 0
 
-	gl.drawArrays(gl.TRIANGLES, 0, 6);
+	screenQuad.draw();
 
 	window.requestAnimationFrame( tick );
 };
@@ -88,8 +86,8 @@ function appInit()
 	} 
 
 	mapXML = maps.map01.responseXML;
-	mapLayer = mapXML.querySelector("layer[id='1']");
-	mapData = mapXML.querySelector("layer[id='1'] > data").textContent;
+	mapLayer = mapXML.querySelector("layer[name='map']");
+	mapData = mapXML.querySelector("layer[name='map'] > data").textContent;
 	mapData = mapData.replaceAll("\n", "");
 	mapData = mapData.replaceAll("\r", "");
 	mapData = mapData.replaceAll(" ", "");
@@ -99,17 +97,15 @@ function appInit()
 	mapArray = new Uint16Array(mapData.length);
 	for ( let i = 0; i < mapData.length; i++ )
 		mapArray[i] = parseInt(mapData[i]);
-	
-	texMap = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, texMap);
-	gl.texImage2D( gl.TEXTURE_2D, 0, gl.R16UI, mapWidth, mapHeight, 0, gl.RED_INTEGER, gl.UNSIGNED_SHORT, mapArray );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
 
-  
-  
+	texMap = new GlTexture();	
+	texMap.initCustom2D(gl.NEAREST, gl.CLAMP_TO_EDGE, gl.R16UI, mapWidth, mapHeight, gl.RED_INTEGER, gl.UNSIGNED_SHORT, mapArray);
+
+	texTileMap = new GlTexture();
+	texTileMap.initRGBA2D(gl.NEAREST, gl.CLAMP_TO_EDGE, images.tileset01);
+
+	screenQuad = new ScreenQuad();
+
 	vsSource = `	#version 300 es 
 			in vec2 a_pos; 
 			in vec2 a_tex;
@@ -134,39 +130,6 @@ function appInit()
 			}`;
 
 	programTileRenderer = new GlProgram(vsSource, fsSource);  
-	programTileRenderer.use();
   
-	let positions = { 
-		numberOfComponents: 2,  
-		data: new Float32Array([-1.0, -1.0,	1.0, -1.0,	1.0, 1.0,
-					-1.0, -1.0,	-1.0, 1.0,	1.0, 1.0]) 
-		};
-	let texCoords = {
-		numberOfComponents: 2, // x, y
-		data: new Float32Array([0.0, 1.0,	1.0, 1.0,	1.0, 0.0,
-					0.0, 1.0,	0.0, 0.0,	1.0, 0.0]) 
-		};
-  
-	// Create an initialize vertex buffers 
-	vboPositions = gl.createBuffer(); 
-	gl.bindBuffer(gl.ARRAY_BUFFER, vboPositions); 
-	gl.bufferData(gl.ARRAY_BUFFER, positions.data, gl.STATIC_DRAW); 
-	gl.vertexAttribPointer(programTileRenderer.aLoc_a_pos, positions.numberOfComponents, gl.FLOAT, gl.FALSE, 0, 0); 
-
-        vboTexCoords = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vboTexCoords); 
-	gl.bufferData(gl.ARRAY_BUFFER, texCoords.data, gl.STATIC_DRAW); 
-	gl.vertexAttribPointer(programTileRenderer.aLoc_a_tex, texCoords.numberOfComponents, gl.FLOAT, gl.FALSE, 0, 0); 
-
-	// Load texture
-	texTileMap = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, texTileMap);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images.tileset01);
-	//gl.generateMipmap(gl.TEXTURE_2D);
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
-
 	window.requestAnimationFrame( tick );
 };
