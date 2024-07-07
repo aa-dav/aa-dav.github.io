@@ -3,6 +3,8 @@ class GlTexture
 	textureId;
 	modeFilter;
 	modeWrap;
+	width;
+	height;
 	
 	constructor()
 	{
@@ -11,6 +13,8 @@ class GlTexture
 
 	initRGBA2D(modeFilter, modeWrap, source)
 	{
+		this.width = source.width;
+		this.height = source.height;
 		gl.bindTexture(gl.TEXTURE_2D, this.textureId);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
 		if ( modeFilter != gl.NEAREST )
@@ -23,6 +27,8 @@ class GlTexture
 
 	initCustom2D(modeFilter, modeWrap, internalFormat, width, height, format, type, source)
 	{
+		this.width = width;
+		this.height = height;
 		gl.bindTexture(gl.TEXTURE_2D, this.textureId);
 		gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, source);
 		if ( modeFilter != gl.NEAREST )

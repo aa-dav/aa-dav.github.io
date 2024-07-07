@@ -33,7 +33,7 @@ class GlProgram
 		{
 			let attrib = gl.getActiveAttrib(this.program, i);
 			let attribLocation = gl.getAttribLocation(this.program, attrib.name); 
-			this[ "aLoc_" + attrib.name ] = attribLocation;
+			this[ "loc_" + attrib.name ] = attribLocation;
 		}
 
 		let unifCount = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
@@ -41,7 +41,7 @@ class GlProgram
 		{
 			let uniform = gl.getActiveUniform(this.program, i);
 			let uniformLocation = gl.getUniformLocation(this.program, uniform.name); 
-			this[ "uLoc_" + uniform.name ] = uniformLocation;
+			this[ "loc_" + uniform.name ] = uniformLocation;
 		}
 	}
 
