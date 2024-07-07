@@ -79,8 +79,8 @@ class MapLayer
 
 	render(tileMap, x, y)
 	{
-		let virtWidth = canvas.width / scaleFactor;
-		let virtHeight = canvas.height / scaleFactor;
+		let virtWidth = virtualWidth();
+		let virtHeight = virtualHeight();
 
 		let viewPortWidthInTiles = Math.floor(((virtWidth + this.tileSize - 1) / this.tileSize));
 		let viewPortHeightInTiles = Math.floor(((virtHeight + this.tileSize - 1) / this.tileSize));

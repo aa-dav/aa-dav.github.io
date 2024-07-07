@@ -18,10 +18,20 @@ let screenQuad;
 let time = 0;
 let mainLayer;
 let backLayer;
-let pos_x = 0;
-let pos_y = 0;
+let vpx = 0;
+let vpy = 0;
 let scaleFactor = 1;
 let keysState = { up: 0, down: 0, right: 0, left: 0, fire: 0, jump: 0 };
+
+function virtualWidth()
+{
+	return canvas.width / scaleFactor;
+}
+
+function virtualHeight()
+{
+	return canvas.height / scaleFactor;
+}
 
 function onResourceLoad()
 {
@@ -71,23 +81,23 @@ function tick( timeStamp )
 	//gl.clearColor(0.0, (1.0 + Math.sin(time / 100)) / 2.0, 0.0, 1.0); 
 	//gl.clear(gl.COLOR_BUFFER_BIT); 
 	let step = 10;
-	pos_x += step * (keysState.right - keysState.left);
-	pos_y += step * (keysState.down - keysState.up);
-	if ( pos_x < 0 )
-		pos_x = 0;
-	if ( pos_y < 0 )
-		pos_y = 0;
+	vpx += step * (keysState.right - keysState.left);
+	vpy += step * (keysState.down - keysState.up);
+	if ( vpx < 0 )
+		vpx = 0;
+	if ( vpy < 0 )
+		vpy = 0;
 
-	let virtWidth = canvas.width / scaleFactor;
-	let virtHeight = canvas.height / scaleFactor;
+	let virtWidth = virtualWidth();
+	let virtHeight = virtualHeight();
 
 	let tx = mainLayer.width * mainLayer.tileSize - virtWidth;
 	let ty = mainLayer.height * mainLayer.tileSize - virtHeight;
-	let sx = backLayer.width * backLayer.tileSize - virtWidth;
+	let sx = 6 * backLayer.width * backLayer.tileSize - virtWidth; // back layers is x times bigger (repeating pattern)
 	let sy = backLayer.height * backLayer.tileSize - virtHeight;
 	
-	backLayer.render(texTileMap, Math.floor( pos_x * sx / tx ), Math.floor( pos_y * sy / ty ));
-	mainLayer.render(texTileMap, pos_x, pos_y);
+	backLayer.render(texTileMap, Math.floor( vpx * sx / tx ), Math.floor( vpy * sy / ty ));
+	mainLayer.render(texTileMap, vpx, vpy);
 
 	window.requestAnimationFrame( tick );
 };
@@ -170,6 +180,8 @@ function appInit()
 	screenQuad = new ScreenQuad();
 
 	mainLayer = new MapLayer(maps.map01.responseXML, "map");
+	vpx = 0;
+	vpy = Math.floor((mainLayer.height * mainLayer.tileSize - virtualHeight()) / 2);
 	backLayer = new MapLayer(maps.map01bg.responseXML, "map");
 
 	gl.disable(gl.CULL_FACE);
